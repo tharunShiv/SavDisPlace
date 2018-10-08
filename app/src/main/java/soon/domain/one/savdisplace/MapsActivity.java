@@ -3,6 +3,7 @@ package soon.domain.one.savdisplace;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
@@ -13,6 +14,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -23,6 +25,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -92,7 +95,44 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // getting the address
                 Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
                 try {
-                    geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                    // get the top result
+                    List<Address> listAddresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                    // check if the address is returned
+                    if (listAddresses != null && listAddresses.size()>0){
+                        String address = "";
+                        // we have to now work with lot of sub parts to fill this up
+
+//                        // feature -> number
+//                        if (listAddresses.get(0).getFeatureName().toString() != null){
+//                            address += listAddresses.get(0).getFeatureName().toString();
+//                        }
+//
+//                        // thoroughfare -> road
+//                        if (listAddresses.get(0).getThoroughfare().toString() != null){
+//                            address += listAddresses.get(0).getThoroughfare().toString();
+//                        }
+//
+//                        // thoroughfare ->  1st Cross
+//                        if (listAddresses.get(0).getThoroughfare().toString() != null){
+//                            address += listAddresses.get(0).getThoroughfare().toString();
+//                        }
+
+
+                        // address line , containing the address
+                        if (listAddresses.get(0).getAddressLine(0) != null){
+                            address += listAddresses.get(0).getAddressLine(0);
+                        }
+
+//                        // admin -> State
+//                        if (listAddresses.get(0).getAdminArea().toString() != null){
+//                            address += listAddresses.get(0).getAdminArea().toString();
+//                        }
+
+
+                        Toast.makeText(MapsActivity.this, address, Toast.LENGTH_SHORT).show();
+                        //Log.i("PlaceInfo", listAddresses.get(0).toString());
+                    }
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -138,7 +178,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             } else {
                 // we got the permission
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1, 1, locationListener);
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10, 10, locationListener);
                 Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 mMap.clear();
                 // Add a marker in Sydney and move the camera
@@ -146,7 +186,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
 
+                }
             }
-        }
-          }
+    }
 }
