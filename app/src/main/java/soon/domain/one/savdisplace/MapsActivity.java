@@ -26,6 +26,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -87,6 +89,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
+                    }
+                    // if address is empty, just usee date time
+                    if (address.equals("")) {
+                        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm yyyy-MM-dd");
+                        address += sdf.format(new Date());
+                        // above gets the current time
                     }
     //                // Add a marker in Sydney and move the camera
     //                LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
@@ -166,7 +174,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                    // if address is empty, just usee date time
+                    if (address.equals("")) {
+                        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm yyyy-MM-dd");
+                        address += sdf.format(new Date());
+                        // above gets the current time
+                    }
                     centerMapOnLocation(location, "You're here: "+address);
+                    Log.d("Hooli", "Location on Button "+location);
                 }
 
                 @Override
@@ -187,9 +202,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             };
         } else {
             // come here through click on the list item
+            Location placeLocation = new Location(LocationManager.GPS_PROVIDER);
+            Integer pl = intent.getIntExtra("placesNumber", -1);
+            LatLng myLL = Main2Activity.locations.get(pl);
 
-            Integer place = intent.getIntExtra("placesNumber", -1);
+            placeLocation.setLatitude(myLL.latitude);
+            placeLocation.setLongitude(myLL.longitude);
 
+            centerMapOnLocation(placeLocation, Main2Activity.myAL.get(pl));
+            Toast.makeText(this, "WOrking well", Toast.LENGTH_SHORT).show();
+            Log.d("Hooli", "Mapps method working");
         }
 
 
@@ -214,42 +236,60 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1, 1, locationListener);
         } else {
+
+            // latest android version
             if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
                 // we didnt get the permission
                 // requesting it
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             } else {
-//                // we got the permission
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10, 10, locationListener);
-                Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                mMap.clear();
 
-                String address="";
-                Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
-                try {
-                    // get the top result
-                    List<Address> listAddresses = geocoder.getFromLocation(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude(), 1);
-                    // check if the address is returned
-                    if (listAddresses != null && listAddresses.size() > 0) {
-                        address = "";
-                        // we have to now work with lot of sub parts to fill this up
-                        //                      // feature -> number // similarly we can access other methods or just one method like getAddressLine()
-                        //                      if (listAddresses.get(0).getFeatureName().toString() != null){
-                        //                            address += listAddresses.get(0).getFeatureName().toString();
-                        //                      }
-                        // address line , containing the address
-                        if (listAddresses.get(0).getAddressLine(0) != null) {
-                            address += listAddresses.get(0).getAddressLine(0);
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-//                // Add a marker in Sydney and move the camera
-//                LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-//                mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
-//                mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
-                centerMapOnLocation(lastKnownLocation, "Loading..."+address);
+
+                // Todo: the error is here
+                // Todo: locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10, 10, locationListener);
+                // Todo: The above line is used to request for location data
+                // By the way, here we are trying to get the current location of the user
+
+
+
+                Log.d("Hooli", "within the else");
+//              // we got the permission
+                //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10, 10, locationListener);
+//                Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+//                mMap.clear();
+//
+//                String address="";
+//                Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+//                try {
+//                    // get the top result
+//                    List<Address> listAddresses = geocoder.getFromLocation(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude(), 1);
+//                    // check if the address is returned
+//                    if (listAddresses != null && listAddresses.size() > 0) {
+//                        address = "";
+//                        // we have to now work with lot of sub parts to fill this up
+//                        //                      // feature -> number // similarly we can access other methods or just one method like getAddressLine()
+//                        //                      if (listAddresses.get(0).getFeatureName().toString() != null){
+//                        //                            address += listAddresses.get(0).getFeatureName().toString();
+//                        //                      }
+//                        // address line , containing the address
+//                        if (listAddresses.get(0).getAddressLine(0) != null) {
+//                            address += listAddresses.get(0).getAddressLine(0);
+//                        }
+//                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//                // if address is empty, just usee date time
+//                if (address.equals("")) {
+//                    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm yyyy-MM-dd");
+//                    address += sdf.format(new Date());
+//                    // above gets the current time
+//                }
+////                // Add a marker in Sydney and move the camera
+////                LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+////                mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
+////                mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
+//                centerMapOnLocation(lastKnownLocation, "Loading..."+address);
 
                 }
             }
@@ -280,7 +320,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        // if address is empty, just usee date time
+        if (address.equals("")) {
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm yyyy-MM-dd");
+            // above gets the current time
+            address += sdf.format(new Date());
+        }
         mMap.addMarker(new MarkerOptions().position(latLng).title(address));
+
+        // adding to the PLaces
+        Main2Activity.myAL.add(address);
+        // locations
+        Main2Activity.locations.add(latLng);
+        // updating the array adapter (list view)
+
+        Main2Activity.myAA.notifyDataSetChanged();
+
+        Toast.makeText(this, "Location Saved!", Toast.LENGTH_SHORT).show();
+
 
     }
 }
