@@ -3,6 +3,7 @@ package soon.domain.one.savdisplace;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -20,6 +21,9 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.io.IOException;
+import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -85,6 +89,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
 
+                // getting the address
+                Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+                try {
+                    geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
