@@ -247,7 +247,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } else {
 
                 // Todo:  this seems fixed
-                // Todo: the problem now is that
+                // Todo: the problems are fixed, though I've not
+                // Todo: I've not tested it rigourously
                 // A saved place when clicked results in a Crash of APp
 
                 // Todo: the error is here
