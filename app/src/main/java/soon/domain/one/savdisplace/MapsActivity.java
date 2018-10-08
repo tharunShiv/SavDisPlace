@@ -2,6 +2,7 @@ package soon.domain.one.savdisplace;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -35,6 +36,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationManager locationManager;
     LocationListener locationListener;
 
+    // creating a method that will set the position and title
+    public void centerMapOnLocation(Location location, String title) {
+
+        // If Location is Null, then it makes the App crash
+        // on emulators, if we dont send the location manually,
+        // it crashes
+        if (location != null) {
+            LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
+            Log.i("centerMapOnLocation", "Inside");
+            // clear Maps
+            mMap.clear();
+            mMap.addMarker(new MarkerOptions().position(userLocation).title(title));
+            // 10 is the zoom between 1 and 20, 20 being the most zoomed
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 15));
+        }
+    }
+
     // if someone has provided yes or no answer to that question
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -44,7 +62,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if(requestCode ==1){
             if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                 if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10, 10, locationListener);
+                    Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    mMap.clear();
+    //                // Add a marker in Sydney and move the camera
+    //                LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+    //                mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
+    //                mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
+                    centerMapOnLocation(lastKnownLocation, "Your Last Known Location");
+
                 }
             }
         }
@@ -77,82 +103,70 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-
+        Intent intent = getIntent();
+        //Integer location = intent.getIntExtra("placesNumber", 0);
+        //Toast.makeText(getApplicationContext(), Integer.toString(location), Toast.LENGTH_SHORT).show();
         // we want all of this code here, because
         // we want to get the location only after the map is ready
+        if (intent.getIntExtra("placesNumber", -1) == -1) {
+            // come through button
+            Toast.makeText(getApplicationContext(), "Inside", Toast.LENGTH_SHORT).show();
+            locationManager =(LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+            locationListener = new LocationListener() {
+                @Override
+                public void onLocationChanged(Location location) {
 
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
+                    centerMapOnLocation(location, "Your Location");
 
-                mMap.clear();
-                // Add a marker in Sydney and move the camera
-                LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
-
-                // getting the address
-                Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
-                try {
-                    // get the top result
-                    List<Address> listAddresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
-                    // check if the address is returned
-                    if (listAddresses != null && listAddresses.size()>0){
-                        String address = "";
-                        // we have to now work with lot of sub parts to fill this up
-
-//                        // feature -> number
-//                        if (listAddresses.get(0).getFeatureName().toString() != null){
-//                            address += listAddresses.get(0).getFeatureName().toString();
-//                        }
-//
-//                        // thoroughfare -> road
-//                        if (listAddresses.get(0).getThoroughfare().toString() != null){
-//                            address += listAddresses.get(0).getThoroughfare().toString();
-//                        }
-//
-//                        // thoroughfare ->  1st Cross
-//                        if (listAddresses.get(0).getThoroughfare().toString() != null){
-//                            address += listAddresses.get(0).getThoroughfare().toString();
-//                        }
-
-
-                        // address line , containing the address
-                        if (listAddresses.get(0).getAddressLine(0) != null){
-                            address += listAddresses.get(0).getAddressLine(0);
+                    // getting the address
+                    Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+                    try {
+                        // get the top result
+                        List<Address> listAddresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                        // check if the address is returned
+                        if (listAddresses != null && listAddresses.size() > 0) {
+                            String address = "";
+                            // we have to now work with lot of sub parts to fill this up
+    //                      // feature -> number // similarly we can access other methods or just one method like getAddressLine()
+    //                      if (listAddresses.get(0).getFeatureName().toString() != null){
+    //                            address += listAddresses.get(0).getFeatureName().toString();
+    //                      }
+                            // address line , containing the address
+                            if (listAddresses.get(0).getAddressLine(0) != null) {
+                                address += listAddresses.get(0).getAddressLine(0);
+                            }
                         }
-
-//                        // admin -> State
-//                        if (listAddresses.get(0).getAdminArea().toString() != null){
-//                            address += listAddresses.get(0).getAdminArea().toString();
-//                        }
-
-
-                        Toast.makeText(MapsActivity.this, address, Toast.LENGTH_SHORT).show();
-                        //Log.i("PlaceInfo", listAddresses.get(0).toString());
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
-            }
 
-            @Override
-            public void onStatusChanged(String s, int i, Bundle bundle) {
+                @Override
+                public void onStatusChanged(String s, int i, Bundle bundle) {
 
-            }
+                }
 
-            @Override
-            public void onProviderEnabled(String s) {
+                @Override
+                public void onProviderEnabled(String s) {
 
-            }
+                }
 
-            @Override
-            public void onProviderDisabled(String s) {
+                @Override
+                public void onProviderDisabled(String s) {
 
-            }
-        };
+                }
+
+            };
+        } else {
+            // come here through click on the list item
+
+            Integer place = intent.getIntExtra("placesNumber", -1);
+
+        }
+
+
+
+
 
         // check whether the user has given us permission
         // if the user is not using minimum Marshmellow
@@ -160,7 +174,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             // no need to ask for permission
             // we can directly fetch stuff
 
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
                 // here to request the missing permissions, and then overriding
@@ -177,14 +191,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // requesting it
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             } else {
-                // we got the permission
+//                // we got the permission
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10, 10, locationListener);
                 Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 mMap.clear();
-                // Add a marker in Sydney and move the camera
-                LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-                mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
+//                // Add a marker in Sydney and move the camera
+//                LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+//                mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
+//                mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
+                centerMapOnLocation(lastKnownLocation, "Your Last Known Location");
 
                 }
             }
