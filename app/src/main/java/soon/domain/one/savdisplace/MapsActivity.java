@@ -3,6 +3,7 @@ package soon.domain.one.savdisplace;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -27,6 +28,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -244,53 +246,55 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             } else {
 
+                // Todo:  this seems fixed
+                // Todo: the problem now is that
+                // A saved place when clicked results in a Crash of APp
 
                 // Todo: the error is here
                 // Todo: locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10, 10, locationListener);
                 // Todo: The above line is used to request for location data
                 // By the way, here we are trying to get the current location of the user
 
-
-
                 Log.d("Hooli", "within the else");
 //              // we got the permission
-                //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10, 10, locationListener);
-//                Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-//                mMap.clear();
-//
-//                String address="";
-//                Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
-//                try {
-//                    // get the top result
-//                    List<Address> listAddresses = geocoder.getFromLocation(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude(), 1);
-//                    // check if the address is returned
-//                    if (listAddresses != null && listAddresses.size() > 0) {
-//                        address = "";
-//                        // we have to now work with lot of sub parts to fill this up
-//                        //                      // feature -> number // similarly we can access other methods or just one method like getAddressLine()
-//                        //                      if (listAddresses.get(0).getFeatureName().toString() != null){
-//                        //                            address += listAddresses.get(0).getFeatureName().toString();
-//                        //                      }
-//                        // address line , containing the address
-//                        if (listAddresses.get(0).getAddressLine(0) != null) {
-//                            address += listAddresses.get(0).getAddressLine(0);
-//                        }
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                // if address is empty, just usee date time
-//                if (address.equals("")) {
-//                    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm yyyy-MM-dd");
-//                    address += sdf.format(new Date());
-//                    // above gets the current time
-//                }
-////                // Add a marker in Sydney and move the camera
-////                LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-////                mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
-////                mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
-//                centerMapOnLocation(lastKnownLocation, "Loading..."+address);
+                if (intent.getIntExtra("placesNumber", -1) == -1) {
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10, 10, locationListener);
+                    Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    mMap.clear();
 
+                    String address = "";
+                    Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+                    try {
+                        // get the top result
+                        List<Address> listAddresses = geocoder.getFromLocation(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude(), 1);
+                        // check if the address is returned
+                        if (listAddresses != null && listAddresses.size() > 0) {
+                            address = "";
+                            // we have to now work with lot of sub parts to fill this up
+                            //                      // feature -> number // similarly we can access other methods or just one method like getAddressLine()
+                            //                      if (listAddresses.get(0).getFeatureName().toString() != null){
+                            //                            address += listAddresses.get(0).getFeatureName().toString();
+                            //                      }
+                            // address line , containing the address
+                            if (listAddresses.get(0).getAddressLine(0) != null) {
+                                address += listAddresses.get(0).getAddressLine(0);
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    // if address is empty, just usee date time
+                    if (address.equals("")) {
+                        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm yyyy-MM-dd");
+                        address += sdf.format(new Date());
+                        // above gets the current time
+                    }
+//                // Add a marker in Sydney and move the camera
+//                LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+//                mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
+//                mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
+                    centerMapOnLocation(lastKnownLocation, "Loading..." + address);
+                }
                 }
             }
     }
@@ -336,6 +340,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // updating the array adapter (list view)
 
         Main2Activity.myAA.notifyDataSetChanged();
+
+
+        // adding to the shared preferences
+        SharedPreferences sharedPreferences = this.getSharedPreferences("soon.domain.one.savdisplace", Context.MODE_PRIVATE);
+
+        // for places
+        try {
+
+            // for LatLng
+            ArrayList<String> latitudes = new ArrayList<>();
+            ArrayList<String> longitudes = new ArrayList<>();
+
+            for (LatLng coord : Main2Activity.locations) {
+                latitudes.add(Double.toString(coord.latitude));
+                longitudes.add(Double.toString(coord.longitude));
+            }
+
+
+            // serializing places
+            sharedPreferences.edit().putString("places", ObjectSerializer.serialize(Main2Activity.myAL)).apply();
+
+            // lats
+            sharedPreferences.edit().putString("lats", ObjectSerializer.serialize(latitudes)).apply();
+
+            //longs
+            sharedPreferences.edit().putString("lons", ObjectSerializer.serialize(longitudes)).apply();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Serializer is just for strings
+        // so for LatLng we have to handle it
 
         Toast.makeText(this, "Location Saved!", Toast.LENGTH_SHORT).show();
 

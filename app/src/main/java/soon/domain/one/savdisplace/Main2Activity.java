@@ -1,6 +1,8 @@
 package soon.domain.one.savdisplace;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -30,6 +32,35 @@ public class Main2Activity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
+
+        SharedPreferences sharedPreferences = this.getSharedPreferences("soon.domain.one.savdisplace", Context.MODE_PRIVATE);
+        ArrayList<String> latitudes = new ArrayList<>();
+        ArrayList<String> longitudes = new ArrayList<>();
+
+
+        myAL.clear();
+        latitudes.clear();
+        longitudes.clear();
+        locations.clear();
+
+
+        try {
+            myAL =(ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("places", ObjectSerializer.serialize(new ArrayList<>())));
+            latitudes =(ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("lats", ObjectSerializer.serialize(new ArrayList<>())));
+            longitudes =(ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("lons", ObjectSerializer.serialize(new ArrayList<>())));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // if we have the proper arrays
+        if (myAL.size() > 0 && latitudes.size() > 0 && longitudes.size() > 0) {
+            if (myAL.size() == latitudes.size() && myAL.size() == longitudes.size()){
+                for (int i=0; i < latitudes.size() ; i++ ) {
+                    locations.add(new LatLng(Double.parseDouble(latitudes.get(i)), Double.parseDouble(longitudes.get(i))));
+                }
+            }
+        }
 
         ListView myLV = findViewById(R.id.listView);
 
