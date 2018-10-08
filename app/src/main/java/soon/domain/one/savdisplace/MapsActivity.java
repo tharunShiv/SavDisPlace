@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapLongClickListener {
 
     private GoogleMap mMap;
 
@@ -65,11 +65,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10, 10, locationListener);
                     Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                     mMap.clear();
+
+
+                    String address="";
+                    Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+                    try {
+                        // get the top result
+                        List<Address> listAddresses = geocoder.getFromLocation(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude(), 1);
+                        // check if the address is returned
+                        if (listAddresses != null && listAddresses.size() > 0) {
+                            address = "";
+                            // we have to now work with lot of sub parts to fill this up
+                            //                      // feature -> number // similarly we can access other methods or just one method like getAddressLine()
+                            //                      if (listAddresses.get(0).getFeatureName().toString() != null){
+                            //                            address += listAddresses.get(0).getFeatureName().toString();
+                            //                      }
+                            // address line , containing the address
+                            if (listAddresses.get(0).getAddressLine(0) != null) {
+                                address += listAddresses.get(0).getAddressLine(0);
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
     //                // Add a marker in Sydney and move the camera
     //                LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
     //                mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
     //                mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
-                    centerMapOnLocation(lastKnownLocation, "Your Last Known Location");
+                    centerMapOnLocation(lastKnownLocation, "Loading..."+address);
 
                 }
             }
@@ -84,6 +107,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
 
 
 
@@ -103,6 +127,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        // to set the long click listener
+
+        // IMPORTANT
+        // implement Google.OnMapLongClickListener at the very top manually
+        mMap.setOnMapLongClickListener(this);
+
         Intent intent = getIntent();
         //Integer location = intent.getIntExtra("placesNumber", 0);
         //Toast.makeText(getApplicationContext(), Integer.toString(location), Toast.LENGTH_SHORT).show();
@@ -115,22 +145,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             locationListener = new LocationListener() {
                 @Override
                 public void onLocationChanged(Location location) {
-
-                    centerMapOnLocation(location, "Your Location");
-
-                    // getting the address
+                    String address="";
                     Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
                     try {
                         // get the top result
                         List<Address> listAddresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
                         // check if the address is returned
                         if (listAddresses != null && listAddresses.size() > 0) {
-                            String address = "";
+                            address = "";
                             // we have to now work with lot of sub parts to fill this up
-    //                      // feature -> number // similarly we can access other methods or just one method like getAddressLine()
-    //                      if (listAddresses.get(0).getFeatureName().toString() != null){
-    //                            address += listAddresses.get(0).getFeatureName().toString();
-    //                      }
+                            //                      // feature -> number // similarly we can access other methods or just one method like getAddressLine()
+                            //                      if (listAddresses.get(0).getFeatureName().toString() != null){
+                            //                            address += listAddresses.get(0).getFeatureName().toString();
+                            //                      }
                             // address line , containing the address
                             if (listAddresses.get(0).getAddressLine(0) != null) {
                                 address += listAddresses.get(0).getAddressLine(0);
@@ -139,6 +166,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                    centerMapOnLocation(location, "You're here: "+address);
                 }
 
                 @Override
@@ -195,13 +223,64 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10, 10, locationListener);
                 Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 mMap.clear();
+
+                String address="";
+                Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+                try {
+                    // get the top result
+                    List<Address> listAddresses = geocoder.getFromLocation(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude(), 1);
+                    // check if the address is returned
+                    if (listAddresses != null && listAddresses.size() > 0) {
+                        address = "";
+                        // we have to now work with lot of sub parts to fill this up
+                        //                      // feature -> number // similarly we can access other methods or just one method like getAddressLine()
+                        //                      if (listAddresses.get(0).getFeatureName().toString() != null){
+                        //                            address += listAddresses.get(0).getFeatureName().toString();
+                        //                      }
+                        // address line , containing the address
+                        if (listAddresses.get(0).getAddressLine(0) != null) {
+                            address += listAddresses.get(0).getAddressLine(0);
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 //                // Add a marker in Sydney and move the camera
 //                LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
 //                mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
 //                mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
-                centerMapOnLocation(lastKnownLocation, "Your Last Known Location");
+                centerMapOnLocation(lastKnownLocation, "Loading..."+address);
 
                 }
             }
+    }
+
+    // generated when IMplementing the Long Click
+    @Override
+    public void onMapLongClick(LatLng latLng) {
+        // getting the address
+        String address="";
+        Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+        try {
+            // get the top result
+            List<Address> listAddresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
+            // check if the address is returned
+            if (listAddresses != null && listAddresses.size() > 0) {
+                address = "";
+                // we have to now work with lot of sub parts to fill this up
+                //                      // feature -> number // similarly we can access other methods or just one method like getAddressLine()
+                //                      if (listAddresses.get(0).getFeatureName().toString() != null){
+                //                            address += listAddresses.get(0).getFeatureName().toString();
+                //                      }
+                // address line , containing the address
+                if (listAddresses.get(0).getAddressLine(0) != null) {
+                    address += listAddresses.get(0).getAddressLine(0);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        mMap.addMarker(new MarkerOptions().position(latLng).title(address));
+
     }
 }
